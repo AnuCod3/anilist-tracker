@@ -23,6 +23,9 @@ export type SupportedSite =
   | "voiranime"
   | "anime-sama"
   | "aniwatch"
+  | "animexin"
+  | "donghuastream"
+  | "luciferdonghua"
   | "generic";
 
 export interface GenericDetectionResult {
