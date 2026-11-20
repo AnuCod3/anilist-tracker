@@ -1,256 +1,273 @@
 # AniList Tracker
 
-> Automatically sync your manga, manhwa, and anime progress to AniList — directly from your reading or streaming site.
+A browser extension for Chrome and Edge that notices which manga chapter or anime episode you are on and updates your [AniList](https://anilist.co) list for you.
 
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 ![Version](https://img.shields.io/badge/version-0.6.0-green)
-![License](https://img.shields.io/badge/License-MIT-green)
-[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-available-0078D4?logo=microsoftedge)](https://microsoftedge.microsoft.com/addons/detail/anilist-tracker)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
+[![CI](https://github.com/AnuCod3/anilist-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/AnuCod3/anilist-tracker/actions/workflows/ci.yml)
 
----
+> **This is a fork.** AniList Tracker was created and is maintained by **[TheNesur](https://github.com/TheNesur)** at
+> [TheNesur/anilist-tracker](https://github.com/TheNesur/anilist-tracker). All credit for the extension goes to them.
+> This fork ([AnuCod3/anilist-tracker](https://github.com/AnuCod3/anilist-tracker)) is used to prepare contributions back upstream.
 
-<!-- Screenshot placeholder -->
-<!-- ![Demo](docs/demo.gif) -->
+<p align="center">
+  <img src="docs/assets/readme/supported-sites.png" alt="The extension's Supported sites page: 12 sites, grouped as manga and anime" width="720">
+</p>
 
----
+## What is this?
+
+[AniList](https://anilist.co) is a free website where people keep a list of the anime they watch and the manga they read, including how far they got.
+Keeping that list up to date by hand is tedious: after every chapter or episode you have to open AniList, find the title and bump the number.
+
+AniList Tracker does this for you. While you read or watch on a supported site, it detects the title and the chapter/episode number on the page.
+One click in the extension's popup (or no click at all, if you turn on auto-update) sends the new progress to your AniList account.
+
+<details>
+<summary>Contents</summary>
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Set up with an AI assistant](#set-up-with-an-ai-assistant)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [How it works](#how-it-works)
+- [Project structure](#project-structure)
+- [Development](#development)
+- [Troubleshooting / FAQ](#troubleshooting--faq)
+- [Status / Roadmap](#status--roadmap)
+- [Credits](#credits)
+- [License](#license)
+
+</details>
 
 ## Features
 
-- **Auto-detection** — reads title and chapter/episode directly from the page DOM, no manual input
-- **Generic detection fallback** — on sites without a dedicated parser, the extension still attempts to detect the title and chapter/episode on a best-effort basis
-- **Catalog progress status** (opt-in) — on supported catalog/homepage listings, titles already linked to AniList are highlighted with a color (up to date, behind, or not started) and a badge; unlinked titles get a neutral, clickable badge. Disabled by default.
-- **Community title matching** — when AniList's search can't find a title automatically, corrections manually resolved by users can (opt-in) help other users hit the same title instantly, once independently confirmed by several accounts
-- **One-click sync** — update your AniList progress without leaving the page
-- **Progress guard** — never accidentally downgrades your progress
-- **Title mapping** — remembers site title → AniList entry associations for instant future detection
-- **Anime & Manga** — tracks both reading and watching progress
-- **Auto-update mode** — optionally skip the confirmation step entirely
-- **Dark & light theme** — follows your preference
-- **EN/FR localization** — full interface in English and French
-- **Secure OAuth 2.0** — your password is never stored; token exchange happens server-side
-- **Privacy-conscious** — every data-sharing feature is opt-in and clearly disclosed, see [PRIVACY.md](./PRIVACY.md)
+- **Automatic detection**: reads the title and chapter/episode number from the page you are on. Works on [12 dedicated sites](#supported-sites) and tries a best-effort "generic" detection everywhere else.
+- **One-click sync**: confirm in the popup and your AniList progress is updated without leaving the page.
+- **Never goes backwards**: if AniList already has a higher number, the update is skipped instead of lowering your progress.
+- **Survives connection problems**: if an update fails (for example, you are offline), it is queued and retried automatically.
+- **Remembers your choices**: once a site title is linked to an AniList entry, it is recognised instantly next time. You can review and delete these links in Settings.
+- **Optional extras** (off by default): auto-update without confirmation, auto-matching of exact titles, progress colours on supported catalog pages, and sharing your title corrections to help other users.
+- **Dark and light theme**, **English and French** interface.
+- **Privacy first**: no analytics or ads, and the extension never sees your AniList password. See [PRIVACY.md](./PRIVACY.md).
 
----
+<p align="center">
+  <img src="docs/assets/readme/options-dark.png" alt="Settings page in the dark theme with demo data: account, appearance, behavior toggles, beta options and title mappings" width="420">
+  <img src="docs/assets/readme/options-light.png" alt="The same Settings page in the light theme" width="420">
+</p>
+<p align="center"><sub>Settings page in dark and light theme (demo account and demo data).</sub></p>
 
-## Supported Sites
+<!-- TODO(media): short GIF of the popup detecting a chapter on a real reading site and syncing it.
+     Needs a real AniList login and a live third-party site, so it must be recorded manually by the owner
+     with a throwaway/demo AniList account. See docs/README_MAINTENANCE.md. -->
 
-### Manga & Webtoon
+### Supported sites
 
-| Site | URL |
-|------|-----|
-| MangaDex | mangadex.org |
-| MangaPlus | mangaplus.shueisha.co.jp |
-| Webtoon | webtoons.com |
-| Asura Comics | asuracomic.net |
-| Flame Comics | flamecomics.xyz |
-| Reaper Scans | reaperscans.com |
-| Raijin Scans | raijin-scans.fr |
-| Aniverse | aniverse.fr |
-| Anime Sama | anime-sama.fr |
+| Type | Sites |
+|------|-------|
+| Manga, manhwa, webtoon | MangaDex, MangaPlus, Webtoon, Asura Comics, Flame Comics, Reaper Scans, Raijin Scans, Aniverse, Anime Sama |
+| Anime | Crunchyroll, Voir Anime, Anime Sama, Aniverse, Aniwatch |
+| Anything else | Generic detection (page title, headings, URL). Less reliable; you confirm the result in the popup. |
 
-### Anime
+The same list is built into the extension (Settings → **Supported sites**).
 
-| Site | URL |
-|------|-----|
-| Crunchyroll | crunchyroll.com |
-| Voir Anime | voir-anime.to |
-| Anime Sama | anime-sama.fr |
-| Aniverse | aniverse.fr |
-| Aniwatch | aniwatch.cx |
+## Quick Start
 
-> The same list is available in the extension settings.
+### Option A: install from a store (recommended)
 
-### Any other site
+This is the easiest way and the only one where "Connect to AniList" works out of the box.
 
-If a site isn't in our supported list, the extension attempts **generic detection** — reading the page title, headings, and URL to guess the manga/anime title and chapter/episode number. It's less reliable than a dedicated parser, but it means the extension isn't limited to a fixed list of sites.
+1. Open the [Chrome Web Store page](https://chromewebstore.google.com/detail/anilist-tracker/jfpamdighodolhbeepemgphglgepgcoc) (Chrome) or the [Microsoft Edge Add-ons page](https://microsoftedge.microsoft.com/addons/detail/hegknpgmdcadfdadbbadpkabndogneoi) (Edge) and click **Add**.
+   You should see the AniList Tracker icon in your browser toolbar (pin it via the puzzle-piece menu).
+2. Click the icon, then **Connect to AniList**, and approve access on AniList.
+   You should see your AniList username in the popup.
+3. Open a chapter or episode on a [supported site](#supported-sites) and click the icon.
+   You should see the detected title, the chapter/episode number and a button to update AniList.
 
----
+<p align="center"><img src="docs/assets/readme/popup-login.png" alt="Extension popup before connecting, with a 'Connect to AniList' button" width="340"></p>
 
-## Installation
+### Option B: build it yourself (developers)
 
-### From the Store
+**Prerequisites:** [Git](https://git-scm.com/downloads), [Node.js 20+](https://nodejs.org/) (CI uses 20), Chrome or Edge.
 
-| Store | Status |
-|-------|--------|
-| [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/hegknpgmdcadfdadbbadpkabndogneoi) | ✅ Available |
-| [Chrome Web Store](https://chromewebstore.google.com/detail/anilist-tracker/jfpamdighodolhbeepemgphglgepgcoc) ✅ Available |
+Windows PowerShell:
 
-### Manual / Development
-
-**Prerequisites:** Node.js 18+, npm
-
-```bash
-git clone https://github.com/TheNesur/anilist-tracker.git
+```powershell
+git clone --recurse-submodules https://github.com/AnuCod3/anilist-tracker.git
 cd anilist-tracker
-npm install
-```
-
-**Configure environment** — create a `.env` file at the project root:
-
-```env
-VITE_ANILIST_CLIENT_ID=your_client_id
-VITE_ANILIST_REDIRECT_URI=anilist_id
-VITE_TOKEN_ENDPOINT=token
-```
-
-> The redirect URI points to the backend, not to the extension itself — the OAuth flow opens in a normal browser tab (sharing your existing AniList session) and the backend serves a landing page that the extension detects and closes automatically. No need to look up your extension ID.
-
-> The `CLIENT_SECRET` is **never bundled** in the extension. Token exchange is handled server-side — see [Security](#security). The backend that powers authentication and community title matching lives in a separate repository: [anilist-tracker-backend](https://github.com/TheNesur/anilist-tracker-backend).
-
-**Build:**
-
-```bash
+npm ci
+Copy-Item .env.example .env   # optional, only needed for login (see Configuration)
 npm run build
 ```
 
-For a stable local extension ID during development (useful for testing OAuth without re-registering a redirect URI on every reload), see `npm run build:dev` and `dev-key.txt` in the repository.
+You should see `✓ built in …` and a new `dist\` folder.
 
-**Load in browser:**
+Then load it into the browser:
 
-1. Go to `edge://extensions/` or `chrome://extensions/`
-2. Enable **Developer mode**
-3. Click **Load unpacked** → select the `dist/` folder
+1. Open `chrome://extensions` (or `edge://extensions`) and switch on **Developer mode**.
+2. Click **Load unpacked** and select the `dist` folder.
+   You should see "AniList Tracker 0.6.0" in the list and its icon in the toolbar.
 
----
+> A self-built extension shows all pages and runs detection, but **Connect to AniList only works with your own AniList API client and token backend** (see [Configuration](#configuration)). To simply use the extension, install it from a store.
 
-## How It Works
+<details>
+<summary>macOS / Linux</summary>
 
-```
-You open a chapter or episode page
-        ↓
-Content script detects title + chapter/episode from the DOM
-(or, on unsupported sites, generic detection runs on demand)
-        ↓
-Background worker looks up your title mapping, searches AniList,
-or checks the community title-matching database as a last resort
-        ↓
-Your current AniList progress is fetched
-        ↓
-You open the popup → confirm the update (or it's automatic)
-        ↓
-AniList progress is updated via GraphQL API
+```bash
+git clone --recurse-submodules https://github.com/AnuCod3/anilist-tracker.git
+cd anilist-tracker
+npm ci
+cp .env.example .env   # optional
+npm run build
 ```
 
-On supported catalog/homepage listings, an optional, separate flow runs alongside the above: the page's title cards are matched against your existing title mappings, your full AniList manga progress is fetched in a single batched request and cached locally, and each already-mapped card is annotated with a status badge — all without leaving the page.
+Load `dist/` as an unpacked extension as described above.
+</details>
 
----
+## Set up with an AI assistant
 
-## Architecture
+Open this folder in Claude Code, Codex, Gemini CLI or Cursor and paste:
 
+```text
+Read AGENTS.md and README.md in this repository. Set the project up on my machine:
+check that Node.js 20+ and Git are installed, make sure the git submodule
+src/shared/anilist-tracker-shared is checked out, install dependencies with npm ci,
+create .env from .env.example (ask me for the AniList client ID, redirect URI and
+token endpoint, never invent them; leave them empty if I only want to try the UI),
+run the type check and the build, then tell me step by step how to load the dist
+folder as an unpacked extension in Chrome or Edge.
 ```
+
+## Usage
+
+| I want to… | Do this |
+|---|---|
+| Update my progress | Open a chapter/episode on a supported site → click the toolbar icon → confirm the update. |
+| Fix a wrong match | In the popup, search for the right AniList entry and pick it. The choice is remembered for that site title. |
+| Track on an unsupported site | Click the icon. Generic detection guesses the title and number and asks whether it is anime or manga. |
+| Skip the confirmation | Settings → **Beta features** on → **Auto-update** on. |
+| Forget a remembered match | Settings → **Title mappings** → click ✕ next to the title. |
+| Report a problem | Use the report option in the popup (wrong match, title not found, site not working). |
+
+## Configuration
+
+Only needed when you build the extension yourself. Values go into `.env` (copied from [`.env.example`](./.env.example)) and are baked in at build time.
+
+| Variable | Required | What it does | Where to get it |
+|---|---|---|---|
+| `VITE_ANILIST_CLIENT_ID` | For login | ID of the AniList API client used for OAuth (secure sign-in without sharing your password). | Create a client at [anilist.co/settings/developer](https://anilist.co/settings/developer). |
+| `VITE_ANILIST_REDIRECT_URI` | For login | Redirect URL registered on that client. It points to the token backend, not the extension. | Your backend's callback URL. |
+| `VITE_TOKEN_ENDPOINT` | No | Backend URL that exchanges the login code for a token. Defaults to the upstream author's backend. | Your own token backend (the upstream backend repository is not public). |
+
+The AniList client **secret** never goes into the extension; it lives only on the backend. The build also works with all three values empty, but login won't.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[Reading / streaming page] -->|content script reads title + number| B[Background service worker]
+    G[Unsupported site] -->|popup injects generic detection on demand| B
+    B -->|saved mapping or AniList search| C[(AniList GraphQL API)]
+    B --> D[Popup: match + current progress]
+    D -->|confirm or auto-update| B
+    B -->|save progress; skip if lower; queue if offline| C
+    E[Token backend] -. OAuth code to token .- B
+```
+
+1. A **content script** (code the extension runs inside supported pages) reads the title and chapter/episode number.
+2. The **background service worker** finds the AniList entry: first your saved title mappings, then an AniList search, optionally the community title database.
+3. The **popup** shows the match and your current AniList progress. You confirm, or it updates automatically.
+4. The update goes to the AniList GraphQL API. Lower numbers are skipped; failed updates are queued and retried.
+5. Sign-in uses OAuth through a small backend run by the upstream author, so the client secret never ships in the extension.
+
+## Project structure
+
+```text
 src/
-├── background/         # Service worker — OAuth, AniList API, message routing, alias system
-├── content/
-│   ├── index.ts        # Content script — chapter/episode detection on supported sites
-│   └── catalog.ts       # Content script — optional catalog/homepage status overlay
-├── parsers/
-│   ├── manga/           # Site-specific DOM parsers (manga/webtoon)
-│   ├── anime/            # Site-specific DOM parsers (anime)
-│   ├── catalog/           # Site-specific catalog/homepage parsers (progress status overlay)
-│   ├── generic.ts        # Best-effort detection for unsupported sites
-│   └── index.ts          # Parser factory
-├── popup/               # Extension popup UI
-├── options/              # Settings page
-├── types/                # Shared TypeScript types
-└── utils/                # AniList GraphQL client, storage, i18n
-_locales/
-├── en/messages.json    # English strings
-└── fr/messages.json    # French strings
+├── background/   service worker: OAuth, AniList calls, progress queue, title aliases, toolbar badge
+├── content/      scripts injected into supported sites (detection + optional catalog overlay)
+├── parsers/      one parser per site (manga/, anime/, catalog/) + parser factory
+├── popup/        toolbar popup UI and generic detection for unsupported sites
+├── options/      settings page
+├── sites/        "Supported sites" page and the site registry
+├── shared/       git submodule anilist-tracker-shared (title normalisation)
+└── utils/        AniList GraphQL client, storage, i18n, matching
+public/           manifest.json, icons, changelog page
+_locales/         English and French UI strings
+scripts/          capture-readme-media.mjs (README screenshots)
 ```
 
-The OAuth token exchange and community title-matching endpoints are handled by a separate backend service — see [anilist-tracker-backend](https://github.com/TheNesur/anilist-tracker-backend).
+## Development
 
----
+| Command | What it does |
+|---|---|
+| `npm ci` | Install exact dependency versions. |
+| `npm run typecheck` | TypeScript check (`tsc --noEmit`). This is the project's check; there is no unit test suite. |
+| `npm run build` | Production build into `dist/`. |
+| `npm run build:dev` | Dev build: dev icons, extra dev auth host, and a stable extension ID if `dev-key.txt` exists. |
+| `npm run build:store` | Build and zip for store upload (needs a `zip` command, e.g. from Git Bash or WSL on Windows). |
+| `node scripts/capture-readme-media.mjs` | Regenerate the README screenshots (see [docs/README_MAINTENANCE.md](./docs/README_MAINTENANCE.md)). |
 
-## Adding a New Site
+CI ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml)) runs `npm ci`, `npm run typecheck` and `npm run build` on pushes and pull requests to `main`.
 
-1. Create a parser class in `src/parsers/manga/` or `src/parsers/anime/` implementing `SiteParser`
-2. Add the site to `SupportedSite` in `src/types/index.ts`
-3. Register the parser in `src/parsers/index.ts` → `getParser()`
-4. Add URL patterns to `public/manifest.json` → `content_scripts.matches`
-5. Add the hostname mapping in `src/popup/popup.ts` → `SUPPORTED_HOSTNAMES`
+<details>
+<summary>Adding a new site</summary>
 
-```typescript
-export class MySiteParser implements SiteParser {
-  site: SupportedSite = "mysite";
+1. Create a parser in `src/parsers/manga/` or `src/parsers/anime/` implementing `SiteParser` (`src/types/index.ts`).
+2. Add the site id to `SupportedSite` in `src/types/index.ts`.
+3. Register the parser in `src/parsers/index.ts` → `getParser()`.
+4. Add the hostnames and display name to `src/sites/registry.ts`.
+5. Add the URL patterns to `content_scripts.matches` in `public/manifest.json`.
 
-  isChapterPage(): boolean {
-    return /\/chapter\/\d+/.test(window.location.pathname);
-  }
+Optional catalog status overlay: implement `CatalogParser` in `src/parsers/catalog/` and register it in `src/parsers/catalog/index.ts`. Use the same title cleaning as the site's chapter parser so saved mappings match.
+</details>
 
-  detect(): MediaDetection | null {
-    if (!this.isChapterPage()) return null;
-    const title = document.querySelector("h1")?.textContent?.trim() ?? null;
-    const chapter = parseInt(
-      window.location.pathname.match(/\/chapter\/(\d+)/)?.[1] ?? ""
-    );
-    if (!title || isNaN(chapter)) return null;
-    return {
-      title,
-      progress: chapter,
-      mediaType: "MANGA",
-      source: this.site,
-      url: window.location.href,
-    };
-  }
-}
-```
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for code style and branch rules, and [SECURITY.md](./SECURITY.md) for reporting vulnerabilities.
 
-### Adding catalog progress status for a site
+## Troubleshooting / FAQ
 
-Optional, and independent from the chapter-page parser above:
+<details>
+<summary><b>Build fails with "Cannot find module '../shared/anilist-tracker-shared/index.js'"</b></summary>
 
-1. Create a parser class in `src/parsers/catalog/` implementing `CatalogParser` (`isCatalogPage()` + `detectEntries()`, returning each card's element, title, latest chapter, and URL)
-2. Register it in `src/parsers/catalog/index.ts` → `getCatalogParser()`
-3. Titles should go through the same normalization as the site's chapter-page parser (`cleanTitle` / `stripScanlationSuffix`), so lookups against existing `titleMappings` actually match
+The shared submodule is missing. Run `git submodule update --init --recursive`, or clone with `--recurse-submodules`.
+</details>
 
----
+<details>
+<summary><b>"Connect to AniList" fails on my self-built extension</b></summary>
 
-## Security
+Login needs `VITE_ANILIST_CLIENT_ID` and `VITE_ANILIST_REDIRECT_URI` at build time, plus a token backend that accepts your extension. Fill in `.env`, rebuild, and reload the extension. If you only want to use the extension, install it from a store.
+</details>
 
-The AniList `CLIENT_SECRET` is **never bundled** in the extension. The OAuth token exchange happens via a dedicated backend endpoint that holds the secret server-side and returns only the `access_token` to the extension.
+<details>
+<summary><b>The popup says the page is not supported, or detection failed</b></summary>
 
-Additional security measures:
-- CSRF state parameter on every OAuth flow
-- Extension ID allowlist on the backend
-- Origin enforcement middleware
-- Rate limiting on the token and title-matching endpoints
-- Tokens are never logged
-- Community title-matching submissions are tied to a pseudonymized (HMAC-derived) identifier rather than your raw AniList account ID, and require a valid AniList access token to submit — preventing anonymous spam
-- Generic detection scripts are injected on demand only, scoped to the active tab (`activeTab`), never running automatically in the background
+Make sure you are on an actual chapter/episode page, not the series overview. Sites change their layout often, which can break a parser. Use the report option in the popup so the maintainer can fix it.
+</details>
 
----
+<details>
+<summary><b>It matched the wrong anime or manga</b></summary>
 
-## Tech Stack
+Pick the right entry in the popup's search results. To undo a remembered match, delete it under Settings → Title mappings.
+</details>
 
-- **TypeScript** + **Vite** + **CRXJS** (Manifest V3)
-- **AniList GraphQL API** (OAuth 2.0 Authorization Code flow)
-- **Chrome Extensions API** (`storage`, `tabs`, `alarms`, `scripting`, `activeTab`)
-- **i18n** — EN/FR via `_locales`
-- **Express** + **SQLite** backend on a personal VPS for authentication and community title matching
+<details>
+<summary><b>My code changes don't show up</b></summary>
 
----
+Rebuild (`npm run build`) and click the reload icon on the extension card in `chrome://extensions`. Reload the site tab too, so the content script is re-injected.
+</details>
 
-## Contributing
+## Status / Roadmap
 
-1. Fork the repository
-2. Create a feature branch from `dev`: `git checkout -b feature/my-feature`
-3. Commit your changes
-4. Open a Pull Request toward `dev`
+- **Released:** version 0.6.0 is on the Chrome Web Store and Edge Add-ons. `main` in this fork mirrors upstream `main`.
+- **In progress (not on `main` yet):** donghua (Chinese animation) streaming-site parsers, a multi-season episode resolver and a reminder cue in the popup live on branch [`feat/donghua-multi-season-support`](https://github.com/AnuCod3/anilist-tracker/tree/feat/donghua-multi-season-support). They are proposed upstream in [TheNesur/anilist-tracker#12](https://github.com/TheNesur/anilist-tracker/pull/12) and [#13](https://github.com/TheNesur/anilist-tracker/pull/13).
 
-Please keep PRs focused and avoid mixing unrelated changes.
+## Credits
 
----
-
-## Privacy
-
-No analytics, no tracking, no ads. All data stays on your device by default; the only data-sharing feature (community title matching) is opt-in and fully disclosed.
-
-See [PRIVACY.md](./PRIVACY.md) for the full privacy policy.
-
----
+- **[TheNesur](https://github.com/TheNesur)**: author and maintainer of AniList Tracker, its token backend and the [shared library](https://github.com/TheNesur/Anilist-tracker-shared). Please star the project and report issues at the [upstream repository](https://github.com/TheNesur/anilist-tracker).
+- [AniList](https://anilist.co) for the public GraphQL API.
+- Built with TypeScript, [Vite](https://vite.dev/) and [CRXJS](https://github.com/crxjs/chrome-extension-tools).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE)
+MIT, see [LICENSE](./LICENSE). Copyright (c) 2026 TheNesur.
